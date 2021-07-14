@@ -1,0 +1,28 @@
+"0","library(SOrCERODe)"
+"2","Loading required package: minpack.lm
+"
+"2","Loading required package: ggplot2
+"
+"2","Loading required package: crayon
+"
+"2","
+Attaching package: ‘crayon’
+
+"
+"2","The following object is masked from ‘package:ggplot2’:
+
+    %+%
+
+"
+"2","Loading required package: reshape
+"
+"2","replacing previous import ‘crayon::%+%’ by ‘ggplot2::%+%’ when loading ‘SOrCERODe’"
+"2","
+Attaching package: ‘SOrCERODe’
+
+"
+"2","The following objects are masked _by_ ‘.GlobalEnv’:
+
+    deposition, erosion, gen_profile_SOC
+
+"

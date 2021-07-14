@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1606081135827.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "7AF50967",
+    "lastKnownWriteTime" : 1606086228,
+    "last_content_update" : 1606086226707,
+    "path" : "F:/scripts/build/SOrCERODe/R/deposition.r",
+    "project_path" : "R/deposition.r",
+    "properties" : {
+        "cursorPosition" : "276,0",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

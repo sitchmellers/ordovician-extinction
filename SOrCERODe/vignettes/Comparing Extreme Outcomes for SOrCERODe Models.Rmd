@@ -1,0 +1,184 @@
+---
+title: "Comparing Extreme Outcomes for SOrCERODe Models"
+author: "Mitch Sellers, Sharon Billings"
+date: "11/27/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+In this guide, we are going to demonstrate how to use SOrCERODe in conjunction with ggplot2 to model a soil system's erosion carbon dynamics while changing a number of key parameters. Our goal is to replicate an analysis performed in Billings et al. 2010 and create a corresponding chart: 
+
+![Pictured here is the graph we wish to replicate, with different data.](F:/Scripts/Split_chart.png)
+
+What we're doing is modeling 150 years of erosion across a range of erosion rates, nprod, nox, and fraction of eroded SOC oxidized during transport and burial. On the y axis, we will plot the total erosion-induced C sink or source for the system after 150 years, in kg of C per square meter. On the x axis, we will plot the fraction of eroded SOC which is oxidized during transport and burial.
+
+We will proceed with the following steps: 
+1. Read in sample data using read.csv()
+1. Generate model soil profiles from sample data using gen_profile_soc()
+1. Use simple coding logic to iteratively run a series of erosion() models, while saving the outputs for later use
+1. Build a chart to demonstrate our findings using ggplot2
+
+Let's begin with step 1. For details on the logic behind the arguments and functrionality of the SOrCERODe package, please refer to the package documentation, as well as the companion vignette titled "Modeling the influence of erosion and deposition on ecosystem carbon fluxes with SOrCERODe". 
+
+# Data Preparation
+
+```{r message=FALSE, warning=FALSE}
+Erosion_Data <- read.csv("~/Erosion_Data.csv")
+```
+
+This is a sample dataset included with the SOrCERODe pacakge. With the sample data read in, we can generate our sample soil profile. Since the original chart experiments with erosion rates ranging from 0.1 mm/yr to 10 mm/yr over 150 years of erosion, we know that we will need our soil profile to be at least 1.5 meters deep in the case of the highest erosion rate but only .015 meters deep in the case of the lowest erosion rate. We'll have to generate three different models for it with varying layer depths to represent the corresponding erosion rates. Importantly, we don't need to vary the layer_range across these three profiles, since each will run out to the correct depth for its corresponding erosion rates. 
+
+```{r fig.keep='last',message=FALSE, warning=FALSE, results='hide'}
+library(SOrCERODe)
+library(minpack.lm)
+library(ggplot2)
+erosion_profile_.0001m <- gen_profile_SOC(layers = Erosion_Data$Layers,
+                                   bulk_density = Erosion_Data$B.D.,
+                                   layer_range = c(1:200),
+                                   interpolate = TRUE,
+                                   calculate = TRUE,
+                                   weight_fraction_c = Erosion_Data$Frac_SOC,
+                                   erosion_rate_mt = .0001,
+                                   min_age = 200,
+                                   max_age = 1500)
+```
+
+```{r fig.keep='last',message=FALSE, warning=FALSE, results='hide'}
+erosion_profile_.001m <- gen_profile_SOC(layers = Erosion_Data$Layers,
+                                   bulk_density = Erosion_Data$B.D.,
+                                   layer_range = c(1:200),
+                                   interpolate = TRUE,
+                                   calculate = TRUE,
+                                   weight_fraction_c = Erosion_Data$Frac_SOC,
+                                   erosion_rate_mt = .001,
+                                   min_age = 200,
+                                   max_age = 1500)
+```
+
+```{r fig.keep='last',message=FALSE, warning=FALSE, results='hide'}
+erosion_profile_.01m <- gen_profile_SOC(layers = Erosion_Data$Layers,
+                                   bulk_density = Erosion_Data$B.D.,
+                                   layer_range = c(1:200),
+                                   interpolate = TRUE,
+                                   calculate = TRUE,
+                                   weight_fraction_c = Erosion_Data$Frac_SOC,
+                                   erosion_rate_mt = .01,
+                                   min_age = 200,
+                                   max_age = 1500)
+```
+
+By examining the numbers on the axes, we can see that we have three different soil profiles of different depths with which we can simulate erosion. 
+
+#Modeling Erosion
+
+While we could choose to formulate a new function call for each case of erosion we wish model, it is simpler to give R a list of commands in the form of a loop. In order to do so, we will construct a data frame of parameters, feed those parameters to R iteratively for calls of the erosion() function, and store the corresponding output to the function such that we can generate our plot. To begin, we define the parameters. We know that we want to simulate every combination of three parameters, with two options each. Therefore, our dataframe will be eight rows and three columns in shape. We will use a built-in R function called expand.grid to make our parameters: 
+
+```{r message=FALSE, warning=FALSE}
+parameters<-expand.grid(0:1, 0:1)
+colnames(parameters)<-c('nprod','nox')
+print(parameters)
+
+```
+
+With this, we're ready to begin iterating over parameters to generate our data with a simple for loop.
+
+```{r message=FALSE, warning=FALSE, fig.keep='none', results = 'hide'}
+
+no_oxidation<-c()
+all_oxidation<-c()
+
+for (i in 1:4){
+  model<- erosion(profile = erosion_profile_.0001m,
+                  time = 150,
+                  n_prod = parameters$nprod[i],
+                  n_ox = parameters$nox[i]
+                  )
+  no_oxidation[i]<-model$`Timestep Metrics`$`System Source or Sink`[150]
+  all_oxidation[i]<-model$`Timestep Metrics`$`Maximum Source or Minimum Sink`[150]
+}
+
+df.0001<-rbind(parameters, parameters)
+df.0001$`%oxidized`<-c(rep(0,4), rep(1,4))
+df.0001$outcomes<-c(no_oxidation, all_oxidation)
+df.0001$ero_rate<-rep('0.1 mm/y', 8)
+
+for (i in 1:4){
+  model<- erosion(profile = erosion_profile_.001m,
+                  time = 150,
+                  n_prod = parameters$nprod[i],
+                  n_ox = parameters$nox[i]
+                  )
+  no_oxidation[i]<-model$`Timestep Metrics`$`System Source or Sink`[150]
+  all_oxidation[i]<-model$`Timestep Metrics`$`Maximum Source or Minimum Sink`[150]
+}
+
+df.001<-rbind(parameters, parameters)
+df.001$`%oxidized`<-c(rep(0,4), rep(1,4))
+df.001$outcomes<-c(no_oxidation, all_oxidation)
+df.001$ero_rate<-rep('1 mm/y', 8)
+
+for (i in 1:4){
+  model<- erosion(profile = erosion_profile_.01m,
+                  time = 150,
+                  n_prod = parameters$nprod[i],
+                  n_ox = parameters$nox[i]
+                  )
+  no_oxidation[i]<-model$`Timestep Metrics`$`System Source or Sink`[150]
+  all_oxidation[i]<-model$`Timestep Metrics`$`Maximum Source or Minimum Sink`[150]
+}
+
+df.01<-rbind(parameters, parameters)
+df.01$`%oxidized`<-c(rep(0,4), rep(1,4))
+df.01$outcomes<-c(no_oxidation, all_oxidation)
+df.01$ero_rate<-rep('10 mm/y', 8)
+
+plotdf<-rbind(df.0001,df.001,df.01)
+
+plotdf$label<-as.factor(paste('nox=',plotdf$nox, ', ero rate=', plotdf$ero_rate))
+
+```
+
+In the above code, we ran erosion() 12 times to obtain the correct carbon sink or source values for a range of parameters. We also performed some data frame manipulation in order to get a frame which will help us to produce our final plot. We can check to make sure things look right by examining the first ten rows of data: 
+```{r}
+head(plotdf,10)
+```
+
+Next, we will move on to the plot. 
+
+# Constructing the Plot
+
+
+```{r}
+plot_labels<-c('nprod = 0','nprod = 1')
+names(plot_labels)<-c('0','1')
+plotdf$nox<-as.factor(plotdf$nox)
+
+p<-ggplot(data=plotdf, ggplot2::aes(x=`%oxidized`, y=outcomes))+
+  geom_line(size=1 ,aes(linetype = nox, color=ero_rate))+
+  scale_linetype_manual(values=c('solid','longdash'))+
+  facet_wrap(ggplot2::vars(nprod), nrow = 2, labeller =  labeller(nprod = plot_labels))+
+  labs(x='Fraction of Eroded SOC Oxidized During Transport and Burial', y='Erosion-Induced C Sink or Source at Max Timestep, kg C/m^2',
+       caption='Positive values represent a net carbon source, whereas negative values represent a net carbon sink',
+       title='Carbon Flux Characteristics at Extreme Values')
+
+print(p)
+
+```
+
+
+We've successfully used SOrCERDe to model and plot a range of outcomes for a given soil profile. Feel free to email sitchmellers@gmail.com and sharon.billings@ku.edu for more information. 
+
+
+
+
+
+
+
+

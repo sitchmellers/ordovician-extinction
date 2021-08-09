@@ -1,0 +1,27 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1606493995544.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "7C3CE5D8",
+    "lastKnownWriteTime" : 1606515996,
+    "last_content_update" : 1606515994782,
+    "path" : "F:/scripts/build/SOrCERODe/vignettes/Comparing Extreme Outcomes for SOrCERODe Models.Rmd",
+    "project_path" : "vignettes/Comparing Extreme Outcomes for SOrCERODe Models.Rmd",
+    "properties" : {
+        "cursorPosition" : "175,188",
+        "last_setup_crc32" : "",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

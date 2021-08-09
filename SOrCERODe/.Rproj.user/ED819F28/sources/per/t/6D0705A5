@@ -1,0 +1,24 @@
+{
+    "id": "6D0705A5",
+    "path": "D:/scripts/build/SOrCERODe/R/gen_profile_soc.R",
+    "project_path": "R/gen_profile_soc.R",
+    "type": "r_source",
+    "hash": "3702564173",
+    "contents": "",
+    "dirty": false,
+    "created": 1607956151398.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "cursorPosition": "116,73",
+        "scrollLine": "84"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1606086228,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1606086228,
+    "read_only": false,
+    "read_only_alternatives": []
+}

@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1606081181217.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "BC1E3C85",
+    "lastKnownWriteTime" : 1611523934,
+    "last_content_update" : 1611523932016,
+    "path" : "F:/scripts/build/SOrCERODe/R/gen_profile_SOC.R",
+    "project_path" : "R/gen_profile_SOC.R",
+    "properties" : {
+        "cursorPosition" : "183,0",
+        "scrollLine" : "124"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

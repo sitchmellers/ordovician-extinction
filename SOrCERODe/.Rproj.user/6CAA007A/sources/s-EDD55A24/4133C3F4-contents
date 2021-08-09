@@ -1,0 +1,25 @@
+Package: SOrCERODe
+Type: Package
+Title: Application of the SOrCERO and SOrCERODe Models for Soil Carbon Erosion Modeling
+Date: 2020-11-22
+Version: 2.0
+Authors@R: c(person("Mitch", "Sellers", email = "sitchmellers@gmail.com", role = c('cre', 'aut')),person('Sharon', 'Billings', email='sharon.billings@ku.edu', role = c('ldr', 'aut')))
+Maintainer: Mitch Sellers <sitchmellers@gmail.com>
+Description: Welcome! Thanks for installing and using our package. SOrCERO was initially developed by Dr. Sharon Billings and colleagues in 2010 to model the influence of soil erosion on eroding site soil carbon balances under different erosion scenarios. The model was presented in Billings et al. 2010. In 2019, a second publication described a companion model, SOrCERODe, that allows the user to estimate the influence of both soil erosion and deposition on the soil carbon balance of both sites. Both of these models were created in Microsoft Excel. This package presents those models in the R environment, allowing it to gain greater flexibility in erosional and depositional scenarios.
+License: Proprietary
+Encoding: UTF-8
+LazyData: true
+Depends: R (>= 3.4.4),
+        minpack.lm (>= 1.2.1),
+        ggplot2 (>= 3.1.1),
+        crayon (>= 1.3.4),
+        reshape(>= 0.8.8)
+Imports: minpack.lm (>= 1.2.1),
+        ggplot2 (>= 3.1.1),
+        crayon (>= 1.3.4),
+        reshape(>= 0.8.8)
+RoxygenNote: 6.1.1
+Suggests: knitr, rmarkdown
+VignetteBuilder: knitr
+Author: Mitch Sellers [cre, aut],
+  Sharon Billings [ldr, aut]

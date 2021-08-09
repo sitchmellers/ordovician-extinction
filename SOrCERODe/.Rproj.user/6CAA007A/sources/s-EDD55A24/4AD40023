@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1606084980223.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "4AD40023",
+    "lastKnownWriteTime" : 1611523416,
+    "last_content_update" : 1611523414579,
+    "path" : "F:/scripts/build/SOrCERODe/vignettes/Erosion_and_Deposition_with_SOrCERODe.Rmd",
+    "project_path" : "vignettes/Erosion_and_Deposition_with_SOrCERODe.Rmd",
+    "properties" : {
+        "cursorPosition" : "149,0",
+        "last_setup_crc32" : "",
+        "scrollLine" : "134"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

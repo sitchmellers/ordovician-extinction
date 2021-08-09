@@ -1,0 +1,189 @@
+---
+title: Modeling the influence of erosion and deposition on ecosystem carbon fluxes
+  with SOrCERODe
+author: "Mitch Sellers, Sharon Billings"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+vignette: "%\\VignetteIndexEntry{Erosion_and_Deposition_with_SOrCERODe}\n%\\VignetteEngine{knitr::knitr}
+  \n%\\VignetteEncoding{UTF-8}\n"
+---
+
+# Introduction
+
+In this vignette, we  demonstrate how to use the SOrCERODe package to simulate the influence of erosive and depositional processes on ecosystem carbon fluxes. Several steps are required to model these processes:
+
+1. The eroding profile will be defined using gen_profile_soc()
+1. The downhill or depositional profile will also be defined using gen_profile_soc()
+1. We will execute erosion() on our eroding profile to simulate erosion over time and its influence on carbon dynamics in the eroding system
+1. Finally, we will execute deposition() using the objects defined in the previous step to generate a depositional process and model carbon dynamics in the depositional system.
+
+For additional context, see the pubs folder in the package directory to read the publications which inspired the creation of this package. Users are advised to familiarize themselves with the
+original publication (Billings et al. 2010) to see the original description of some of the terms
+used in the below documentation.
+
+
+----------
+
+# Reading in Sample Data
+
+We begin by importing sample data into the R environment, using built-in R functions. Because we plan on modeling both the erosion process and a corresponding deposition process, we will have two sets of sampled data, titled Erosion_Data and Deposition_Data, respectively. 
+
+
+```{r message=FALSE, warning=FALSE}
+
+Erosion_Data <- read.csv("~/Erosion_Data.csv")
+print(Erosion_Data)
+
+```
+
+Our Erosion dataset has ten rows, and four columns of observations. The column titled "Midpoint" measures the depth of the observation in meters. Deposition_Data is similar in form, but observation values differ between the two.
+
+```{r message=FALSE, warning=FALSE}
+
+Deposition_Data <- read.csv("~/Deposition_Data.csv")
+print(Deposition_Data)
+
+```
+
+----------
+
+# Defining the Soil Profiles
+
+In our model system, we define two soil profiles whose characteristics will determine the properties of the erosive and depositional processes. We begin by defining these profiles using gen_profile_soc. To use gen_profile_soc, we define basic carbon-related characteristics of each soil profile. The function is flexible according to what the user is able to supply. In the above case, we have the  carbon concentrations at multiple, sampled depths, and corresponding bulk density values. For this example, we use ten sample depths of soil characteristics to allow gen_profile_soc() to estimate soil characteristics out to half a meter of depth. Users who have carbon content (as distinct from carbon concentration) for multiple depths can set calculate to FALSE instead. Note that in order to estimate k values, we supply the estimated soil ages of observations at the minimum and maximum depths. 
+Here, the layers argument is set to an R generated vector counting up from 1 to some number that represents the maximum depth to which either the user can supply relevant data, or to which the user is interested in estimating carbon dynamics. The layer range is set to the same values because we supplied values for the entire length of our soil profile. If we wanted to simulate another 1000 observations (another 0.1 meters in depth), we could execute the following, setting layer_range to c(1:6000) and interpolate to TRUE. Here, we will execute the following, for 5000 layers, which at a thickness of 0.0001 meters each, comes out to half a meter of simulated soil depth.
+
+```{r fig.height=8, fig.width=8, message=FALSE, warning=FALSE}
+library(SOrCERODe)
+library(minpack.lm)
+library(ggplot2)
+erosion_profile <- gen_profile_SOC(layers = Erosion_Data$Layers,
+                                   bulk_density = Erosion_Data$B.D.,
+                                   layer_range = c(1:5000),
+                                   interpolate = TRUE,
+                                   calculate = TRUE,
+                                   weight_fraction_c = Erosion_Data$Frac_SOC,
+                                   erosion_rate_mt = .0001,
+                                   min_age = 200,
+                                   max_age = 1500)
+
+head(erosion_profile$Profile)
+```
+
+
+Doing so will generate a plot that displays the depth-dependency of SOC content
+throughout the modeled profile. Note that the function assumes an exponential decline in SOC with depth to interpolate between depths for which empirical data are available and, when the user wishes to estimate depths deeper than those provided, to extrapolate. The argument erosion_rate_mt prompts us for the erosion rate in meters per unit-agnostic timestep (usually years). It will also represent the depth of each soil layer in meters. The final argument, ero_accel, is optional and will apply multiplicative modifiers to the erosion rate, if the user is interested in erosion rates which will change over time. By default, ero_accel is set to a vector of 1s. Soil profile objects generated with this function will be stored as R list objects.To see the profile dataframe itself, we can use the $profile suffix as above. The other dataframe in the list is CallArgs, which simply returns the user's entry data for the function. This is retained in the object for further use in the erosion() function. 
+
+We execute the gen_profile_soc function again to generate a depositional site soil profile:
+
+```{r}
+Deposition_profile<-gen_profile_SOC(layers = Deposition_Data$Layers,
+                                   bulk_density = Deposition_Data$B.D.,
+                                   layer_range = c(1:5000),
+                                   interpolate = TRUE,
+                                   calculate = TRUE,
+                                   weight_fraction_c = Deposition_Data$Frac_SOC,
+                                   erosion_rate_mt = .0001,
+                                   min_age = 175,
+                                   max_age = 1800)
+
+head(Deposition_profile$Profile)
+```
+
+
+# Running the Erosion Model
+
+With our soil profiles created, we are now ready to simulate erosion via the erosion() function. For this example, we will simulate 4500 years of erosion
+
+```{r fig.height=8, fig.width=8, warning=FALSE}
+erosion_model <- erosion(profile = erosion_profile,
+                           time = 4500,
+                           n_prod = 0.5,
+                           n_ox = 0.5
+                           )
+```
+
+The erosion() function takes six arguments, but only requires four in most cases. The first is the erosional soil profile, here defined as erosion_profile generated in a previous step. The second is time, which will define how many timesteps the model should simulate. Increasing the timestep will increase the time and computer memory necessary to execute erosion(). If memory and execution times are a concern, note that when defining a soil profile, the length of a timestep is unit agnostic. This means that the user can define one timestep to mean ten or even one hundred years rather than one year, so long as the erosion rates are scaled accordingly. For example, if we would assume one milimeter of erosion per year in a given system but our computer hardware were restricting the length of our erosion simulation, we could instead measure each "layer" as the amount of soil eroded in ten years, and change the erosion rate to one centimeter per timestep, shrinking the calculations needed by around a factor of ten. Note that output variables must be treated accordingly, and divided by the timestep to obtain annual estimates of carbon fluxes.
+
+The next four arguments can be defined either within R or externally (in excel or another program). The documentation for the erosion function (?erosion) can give further details on what these arguments are. If interpolate is set to TRUE when generating the soil profile object, k will have been defined in that step and erosion() will use that by default. The user can also supply different values for k using the k argument. Similarly, I is computed automatically but can be supplied in the function arguments of erosion() if desired. 
+
+The erosion() function will return a list object of two objects. The first is another list which contains dataframes describing the soil profile at a given time step and depth. For example, we want to take a look at the state of the soil profile after 100 time steps (in our case, 100 years). Because erosion() stores the initial state as the first dataframe, we will call the 101st element of the list to examine the state of the soil profile after 100 years:
+
+```{r}
+head(erosion_model$`Erosion Process`[[101]])
+```
+
+If we need to orient ourselves in the dataset, the first five columns can be very useful to determine what stage of the erosion model we are looking at. The column time_int tells us we are on the 100th year of the erosion process, and the layers and depth columns help us to understand how much erosion has taken place. Note that all depth measurements in this package are in units of meters. 
+
+Next, we can look at the second object in the output of the erosion() function. 
+
+```{r}
+head(erosion_model$`Timestep Metrics`)
+```
+
+The "Timestep Metrics" dataframe offers metrics potentially useful to the user, indexed by time step. For example, if we wish to know how much total soil organic carbon has been eroded by year 100, we input:
+
+```{r}
+erosion_model$`Timestep Metrics`[100,]
+```
+
+By calling the 100th row of our dataframe and examining the column "Cumulative Eroded SOC", we find that approximately .084 kilograms of soil organic carbon per square meter have been eroded by year 100. The three graphs produced with the call of the erosion() function serve to illustrate some of these metrics and their relationships. 
+
+
+# Running the Deposition Model
+
+With our erosional process modeled and our soil profiles defined, we have all the ingredients to run the depositional model. The call for the deposition() function will look quite similar to that of the erosion() function: 
+
+```{r fig.height=8, fig.width=8, warning=FALSE}
+deposition_model<-deposition(dep_profile=Deposition_profile,
+                     ero_process=erosion_model,
+                     time=200,
+                     n_ox_ero=0.5,
+                     n_prod_ero=0.5,
+                     n_ox_dep = 0.5,
+                     n_prod_dep = 0.5,
+                     frac_oxidized = rep(0, 200))
+```
+
+The first argument, dep_profile, refers to the depositional profile we created earlier with gen_profile_soc(). The second argument will reference the erosion process created with erosion() in the previous step. Note that we do not need to specify the "Erosion Process" list of eroprocess1 here. The deposition() function looks for an object created by erosion() specifically and will search automatically for what it needs within that list object. The time argument works very similarly to how it works in erosion(): it specifies how many time steps the model should simulate. Finally, the deposition() function requires a separate k, I, n_ox and n_prod argument for the erosional site and the depositional site, since they are theoretically unique soil profiles with unique characteristics. If k was generated in gen_profile_soc for the erosional profile and for the depositional profile, deposition() will use those values unless otherwise specified. In the above example, we allow depotition() to use the values for k that it created for both profiles. The final argument is frac_oxidized, which gives the percentage of SOC assumed to be oxidized during transport from erosional site to depositional site. It should be at least equal in length to the magnitude of the time argument. Here we just use rep(0, 200) to ask R to generate a vector of 200 0s, indicating that no soil organic carbon will be oxidized in transport from erosional site to depositional site. Just as with the erosion() function, the deposition() function will generate a list of two objects. One object is a list of dataframes which describes the depositional process. Its structure will look very similar to that of the erosional process dataframe we looked at earlier. As with the erosional process list, the first dataframe is that for time_int=0, so we will add one to our index to find data relevant to our timestep of choice. Here, we are interested in looking at the depositional site after 100 years of deposition:
+
+```{r}
+head(deposition_model$`Depositional Process`[[101]])
+```
+
+The negative depth and layer values indicate teh accumulation of soil _above_ the initial soil surface Additionally, we can view a series of timestep metrics specific to the depositional process:
+
+```{r}
+head(deposition_model$`Dep Timestep Metrics`)
+```
+
+Congratulations! We have successfully modeled some of the ecosystem carbon consequences resulting from soil erosion and deposition using the SOrCERODe package. Feel free to email sitchmellers@gmail.com and sharon.billings@ku.edu for more information. 
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, include=FALSE}
+library(SOrCERODe)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
